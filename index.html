@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMPYRIA OS // Strategic Command Center</title>
+    <!-- Google Fonts for elite typography -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #090a0f;
+            --bg-surface: #12151c;
+            --bg-surface-glass: rgba(18, 21, 28, 0.75);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(212, 160, 23, 0.4);
+            --accent-gold: #d4a017;
+            --accent-cyan: #00f0ff;
+            --text-main: #f0f2f5;
+            --text-muted: #8b949e;
+            --danger: #ff4d4d;
+            --success: #00ff66;
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(212, 160, 23, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(0, 240, 255, 0.03) 0%, transparent 40%);
+        }
+
+        /* Top Navigation & Status Bar */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 2.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            background: var(--bg-surface-glass);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-logo {
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-gold);
+            box-shadow: 0 0 12px var(--accent-gold);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .brand-title {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .brand-title span {
+            color: var(--accent-gold);
+        }
+
+        .system-status {
+            display: flex;
+            gap: 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        /* Main Workspace Layout */
+        main {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            flex: 1;
+            max-width: 1800px;
+            width: 100%;
+            margin: 0 auto;
+            height: calc(100vh - 73px);
+        }
+
+        /* Sidebar: Workflows Navigation */
+        aside {
+            border-right: 1px solid var(--border-subtle);
+            background: rgba(14, 17, 23, 0.5);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .sidebar-heading {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .workflow-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .workflow-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: transparent;
+            transition: background 0.2s ease;
+        }
+
+        .workflow-card:hover {
+            border-color: var(--border-active);
+            transform: translateY(-2px);
+        }
+
+        .workflow-card.active {
+            border-color: var(--accent-gold);
+            background: linear-gradient(135deg, rgba(212, 160, 23, 0.05) 0%, var(--bg-surface) 100%);
+        }
+
+        .workflow-card.active::before {
+            background: var(--accent-gold);
+        }
+
+        .workflow-tag {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.35rem;
+        }
+
+        .workflow-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .workflow-desc {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Workspace Console & Execution Area */
+        .console-area {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-base);
+            overflow-y: auto;
+            padding: 2.5rem;
+            gap: 2rem;
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 1.5rem;
+        }
+
+        .console-title h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .console-title p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Parameter Form Grid */
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .param-group label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+
+        .param-group input, .param-group select, .param-group textarea {
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .param-group input:focus, .param-group select:focus, .param-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Action Trigger Button */
+        .execute-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .btn-execute {
+            background: linear-gradient(135deg, var(--accent-gold) 0%, #b8860b 100%);
+            color: #000;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.85rem 2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(212, 160, 23, 0.25);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-execute:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(212, 160, 23, 0.4);
+        }
+
+        .btn-execute:active {
+            transform: translateY(0);
+        }
+
+        /* Output Telemetry & Results Stream */
+        .output-container {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            min-height: 350px;
+            position: relative;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-tool {
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-tool:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .output-content {
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-main);
+            white-space: pre-wrap;
+        }
+
+        .output-content code {
+            font-family: var(--font-mono);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: var(--accent-cyan);
+        }
+
+        /* Loading Spinner */
+        .loader-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 4rem 0;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--border-subtle);
+            border-top-color: var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            aside {
+                border-right: none;
+                border-bottom: 1px solid var(--border-subtle);
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-logo"></div>
+            <div class="brand-title">Empyria <span>OS 4.2</span> // Control Plane</div>
+        </div>
+        <div class="system-status">
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span>Neural Subroutine Active</span>
+            </div>
+            <div class="status-item">
+                <span>Latency: 14ms</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Workflow Selector Sidebar -->
+        <aside>
+            <div class="sidebar-heading">Execution Subroutines</div>
+
+            <div class="workflow-card active" onclick="switchWorkflow(0)">
+                <div class="workflow-tag">Subroutine 01 // GTM Strategy</div>
+                <div class="workflow-title">B2B AI Positioning Sprint</div>
+                <div class="workflow-desc">Deconstruct enterprise value props, generate category design axes, and outline aggressive market entry hooks.</div>
+            </div>
+
+            <div class="workflow-card" onclick="switchWorkflow(1)">
+                <div class="workflow-tag">Subroutine 02 // Crisis Comm</div>
+                <div class="workflow-title">Executive Crisis Response</div>
+                <div class="workflow-desc">Draft legally sound, calibrated stakeholder briefings and immediate remediation statements under pressure.</div>
+            </div>
+
+            <div class="workflow-card" onclick="switchWorkflow(2)">
+                <div class="workflow-tag">Subroutine 03 // Architecture</div>
+                <div class="workflow-title">Autonomous Agentic Spec</div>
+                <div class="workflow-desc">Architect secure multi-tenant microservices, API schemas, and biometric security gateways instantly.</div>
+            </div>
+
+            <div class="workflow-card" onclick="switchWorkflow(3)">
+                <div class="workflow-tag">Subroutine 04 // Audit & Refine</div>
+                <div class="workflow-title">Bullshit & Bias Detector</div>
+                <div class="workflow-desc">Stress-test reasoning, expose hidden assumptions, and sharpen strategic arguments with brutal candor.</div>
+            </div>
+        </aside>
+
+        <!-- Interactive Console & Output -->
+        <section class="console-area">
+            <div class="console-header">
+                <div class="console-title" id="consoleTitle">
+                    <h1 id="wfTitle">B2B AI Positioning Sprint</h1>
+                    <p id="wfDesc">Input your core offering and target audience to formulate a high-leverage market positioning framework.</p>
+                </div>
+            </div>
+
+            <!-- Dynamic Parameter Form -->
+            <div class="params-grid" id="paramsGrid">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <!-- Execution Bar -->
+            <div class="execute-bar">
+                <button class="btn-execute" onclick="executeWorkflow()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Initialize Execution
+                </button>
+            </div>
+
+            <!-- Output Container -->
+            <div class="output-container">
+                <div class="output-header">
+                    <span id="outputStatus">READY FOR TELEMETRY INPUT</span>
+                    <div class="output-actions">
+                        <button class="btn-tool" onclick="copyOutput()">Copy Output</button>
+                        <button class="btn-tool" onclick="clearOutput()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="loader-container" id="loader">
+                    <div class="spinner"></div>
+                    <span>EXECUTING NEURAL SUBROUTINE...</span>
+                </div>
+
+                <div class="output-content" id="outputContent">Select parameters above and click 'Initialize Execution' to generate structured intelligence artifacts.</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Workflow Definitions & Configuration
+        const workflows = [
+            {
+                title: "B2B AI Positioning Sprint",
+                desc: "Deconstruct enterprise value props, generate category design axes, and outline aggressive market entry hooks.",
+                params: [
+                    { id: "p1", label: "Product / Service Name", type: "text", value: "NexusOS 4.2" },
+                    { id: "p2", label: "Target Enterprise Buyer", type: "text", value: "Chief Operations Officers in Mid-Market Logistics" },
+                    { id: "p3", label: "Core Technical Edge", type: "text", value: "Multi-tenant enclave isolation with local 9B abliterated model integration" }
+                ],
+                generator: (vals) => `### AUTHORITY GTM POSITIONING REPORT
+**Asset Generated for:** ${vals[0]}
+**Target Segment:** ${vals[1]}
+**Core Differentiation:** ${vals[2]}
+
+---
+
+#### 1. Category Design & Wedge Strategy
+* **The Old Paradigm:** Legacy ERPs force manual reconciliation across fragmented departmental silos, creating blind spots and bloated headcount.
+* **The New Category:** *Autonomous Operations Control Planes* — systems that self-heal data flow without human latency.
+* **The Wedge:** Deploy within 48 hours as a secure read-only analytics overlay before enabling automated orchestration.
+
+#### 2. High-Impact Value Pillars
+1. **Zero-Trust Isolation:** Guaranteed data residency and cryptographic tenant separation.
+2. **Deterministic Speed:** Local LLM execution eliminates cloud egress bottlenecks and API latency spikes.
+3. **Frictionless Onboarding:** Zero manual schema mapping required.
+
+#### 3. Immediate Outbound Hook
+> "Most operations leaders are burning 30% of their bandwidth fighting their own tooling. What would change if your infrastructure ran autonomously with zero cloud reliance?"`
+            },
+            {
+                title: "Executive Crisis Response",
+                desc: "Draft legally sound, calibrated stakeholder briefings and immediate remediation statements under pressure.",
+                params: [
+                    { id: "p1", label: "Crisis Event Type", type: "select", options: ["Vendor Payment Discrepancy", "Data Integration Outage", "Compliance / Audit Flag", "Key Personnel Transition"] },
+                    { id: "p2", label: "Stakeholder Audience", type: "text", value: "Executive Committee & External Partners" },
+                    { id: "p3", label: "Tone & Urgency Level", type: "select", options: ["Calm, Direct & Authoritative", "Urgent & Remedial", "Formal & Legalistic"] }
+                ],
+                generator: (vals) => `### INCIDENT BRIEFING & ACTION PROTOCOL
+**Event Classified:** ${vals[0]}
+**Recipient Group:** ${vals[1]}
+**Modulation:** ${vals[2]}
+
+---
+
+#### Executive Summary
+We have identified and isolated the discrepancy. Immediate remediation protocols are active. All systemic exposure is contained.
+
+#### Stakeholder Communication Draft
+> **Subject:** Action Confirmed: Resolution Protocol for ${vals[0]}
+>
+> Team,
+> 
+> We are writing to confirm that the reported discrepancy regarding ${vals[0].toLowerCase()} has been fully addressed. Documentation has been verified, payment routing is confirmed for disbursement, and secondary audit checks are now in place.
+> 
+> No operational interruption is expected. Thank you for your swift coordination.
+
+#### Recommended Next Steps
+1. Archive confirmation receipts in the central compliance repository.
+2. Schedule a 5-minute retrospective to streamline vendor verification steps going forward.`
+            },
+            {
+                title: "Autonomous Agentic Spec",
+                desc: "Architect secure multi-tenant microservices, API schemas, and biometric security gateways instantly.",
+                params: [
+                    { id: "p1", label: "System Name", type: "text", value: "Empyria Enclave Core" },
+                    { id: "p2", label: "Architecture Pattern", type: "select", options: ["Headless CMS + Intranet", "Agentic Operations Control Plane", "HMAC Audit Data Refinery"] },
+                    { id: "p3", label: "Security Gate", type: "text", value: "Token2 Multi-Protocol Hardware Key + Biometric Auth" }
+                ],
+                generator: (vals) => `### ARCHITECTURAL SPECIFICATION: ${vals[0].toUpperCase()}
+**Pattern:** ${vals[1]}
+**Access Control:** ${vals[2]}
+
+---
+
+#### 1. System Topology
+* **Control Plane:** Headless microservices containerized with strict network namespace isolation.
+* **Data Layer:** Encrypted SQLite/PostgreSQL store with HMAC-signed cryptographic chain-of-custody logs.
+* **Authentication Pipeline:** Hardware-backed cryptographic verification enforcing zero trust defaults.
+
+#### 2. API Schema Blueprint
+\`\`\`json
+{
+  "enclave_id": "EMP-990-SEC",
+  "auth_protocol": "Token2-FIDO2",
+  "status": "SECURE",
+  "audit_trail": "HMAC_SHA256_VERIFIED"
+}
+\`\`\`
+
+#### 3. Deployment Checklist
+- [x] Verify multi-tenant enclave boundaries.
+- [ ] Initialize cryptographic audit logging daemon.
+- [ ] Enforce hardware key verification gates.`
+            },
+            {
+                title: "Bullshit & Bias Detector",
+                desc: "Stress-test reasoning, expose hidden assumptions, and sharpen strategic arguments with brutal candor.",
+                params: [
+                    { id: "p1", label: "Argument / Plan to Audit", type: "textarea", value: "We should expand into three new markets simultaneously because our core product is finally stable." },
+                    { id: "p2", label: "Primary Risk Tolerance", type: "select", options: ["Aggressive Expansion", "Conservative & Defensible", "Capital Preservation"] }
+                ],
+                generator: (vals) => `### STRATEGIC AUDIT & VULNERABILITY REPORT
+**Audited Statement:** "${vals[0]}"
+**Constraint Profile:** ${vals[1]}
+
+---
+
+#### 1. Hidden Assumptions Exposed
+* **Assumption A:** Product stability in a single known context automatically translates to product-market fit in unverified markets. *(Flaw: Ignores localized regulatory and behavioral friction).*
+* **Assumption B:** Organizational bandwidth scales linearly with geographic expansion. *(Flaw: Multi-market execution dilutes focus and accelerates burn).*
+
+#### 2. Second-Order Consequences
+* **Immediate:** Short-term revenue bump offset by skyrocketing customer acquisition costs (CAC).
+* **Delayed:** Support and engineering bandwidth gets pulled away from the core product, degrading the stability that made expansion seem viable in the first place.
+
+#### 3. Strategic Realignment
+> **Verdict:** Do not scatter focus across three fronts. Select **one** high-leverage beachhead market, lock down dominance with zero friction, and fund subsequent expansion entirely out of localized cash flow.`
+            }
+        ];
+
+        let currentWorkflowIndex = 0;
+
+        function switchWorkflow(index) {
+            currentWorkflowIndex = index;
+            
+            // Update active state in sidebar
+            const cards = document.querySelectorAll('.workflow-card');
+            cards.forEach((card, idx) => {
+                if (idx === index) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+
+            // Render header & params
+            const wf = workflows[index];
+            document.getElementById('wfTitle').innerText = wf.title;
+            document.getElementById('wfDesc').innerText = wf.desc;
+            document.getElementById('outputStatus').innerText = "READY FOR TELEMETRY INPUT";
+            document.getElementById('outputContent').innerText = "Select parameters above and click 'Initialize Execution' to generate structured intelligence artifacts.";
+
+            renderParams(wf.params);
+        }
+
+        function renderParams(params) {
+            const grid = document.getElementById('paramsGrid');
+            grid.innerHTML = '';
+
+            params.forEach(param => {
+                const group = document.createElement('div');
+                group.className = 'param-group';
+
+                const label = document.createElement('label');
+                label.innerText = param.label;
+                group.appendChild(label);
+
+                if (param.type === 'select') {
+                    const select = document.createElement('select');
+                    select.id = param.id;
+                    param.options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.innerText = opt;
+                        select.appendChild(option);
+                    });
+                    group.appendChild(select);
+                } else if (param.type === 'textarea') {
+                    const textarea = document.createElement('textarea');
+                    textarea.id = param.id;
+                    textarea.rows = 2;
+                    textarea.value = param.value;
+                    group.appendChild(textarea);
+                } else {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = param.id;
+                    input.value = param.value;
+                    group.appendChild(input);
+                }
+
+                grid.appendChild(group);
+            });
+        }
+
+        function executeWorkflow() {
+            const wf = workflows[currentWorkflowIndex];
+            const values = wf.params.map(p => document.getElementById(p.id).value);
+
+            const loader = document.getElementById('loader');
+            const content = document.getElementById('outputContent');
+            const status = document.getElementById('outputStatus');
+
+            loader.style.display = 'flex';
+            content.style.display = 'none';
+            status.innerText = "PROCESSING SUBROUTINE...";
+
+            // Simulate neural execution latency for high-end feel
+            setTimeout(() => {
+                loader.style.display = 'none';
+                content.style.display = 'block';
+                content.innerHTML = formatMarkdown(wf.generator(values));
+                status.innerText = "EXECUTION COMPLETE // 0ms ERROR";
+            }, 600);
+        }
+
+        function formatMarkdown(text) {
+            // Simple robust markdown parser for bold, headers, code blocks, lists, blockquotes
+            let html = text
+                .replace(/### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/#### (.*$)/gim, '<h4>$1</h4>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/> (.*$)/gim, '<blockquote style="border-left: 3px solid var(--accent-gold); padding-left: 1rem; margin: 1rem 0; color: var(--text-muted); font-style: italic;">$1</blockquote>')
+                .replace(/^- (.*$)/gim, '<li style="margin-left: 1.5rem; margin-bottom: 0.3rem;">$1</li>')
+                .replace(/^(\d+)\. (.*$)/gim, '<li style="margin-left: 1.5rem; margin-bottom: 0.3rem; list-style-type: decimal;">$2</li>');
+
+            // Handle code blocks
+            html = html.replace(/```json([\s\S]*?)```/g, '<pre style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.85rem; border: 1px solid var(--border-subtle); margin: 1rem 0;"><code>$1</code></pre>');
+
+            return html;
+        }
+
+        function copyOutput() {
+            const content = document.getElementById('outputContent').innerText;
+            navigator.clipboard.writeText(content);
+            const status = document.getElementById('outputStatus');
+            const original = status.innerText;
+            status.innerText = "COPIED TO CLIPBOARD";
+            setTimeout(() => status.innerText = original, 2000);
+        }
+
+        function clearOutput() {
+            document.getElementById('outputContent').innerText = "Console cleared. Ready for next execution.";
+            document.getElementById('outputStatus').innerText = "STANDBY";
+        }
+
+        // Initialize on load
+        window.onload = () => {
+            switchWorkflow(0);
+        };
+    </script>
+</body>
+</html>
